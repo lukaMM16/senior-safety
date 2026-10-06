@@ -25,6 +25,18 @@ exports.sendHelpNotification = onDocumentCreated(
       const familyCode = event.params.familyCode;
       const requestId = event.params.requestId;
 
+      const familyDocument = await getFirestore()
+          .collection("families")
+          .doc(familyCode)
+          .get();
+
+      const familyData = familyDocument.data() || {};
+      const requestData = event.data ? event.data.data() : {};
+      const seniorName =
+        requestData.seniorName ||
+        familyData.seniorName ||
+        "Starija osoba";
+
       logger.info("Novi zahtjev za pomoć.", {
         familyCode: familyCode,
         requestId: requestId,
@@ -71,10 +83,11 @@ exports.sendHelpNotification = onDocumentCreated(
 
         data: {
           type: "help_request",
-          title: "🚨 Senior Safety",
-          body: "Starija osoba treba pomoć!",
           familyCode: familyCode,
           requestId: requestId,
+          title: "🚨 Senior Safety",
+          body: `${seniorName} treba pomoć!`,
+          seniorName: String(seniorName),
         },
 
         android: {
@@ -90,7 +103,7 @@ exports.sendHelpNotification = onDocumentCreated(
           );
 
         logger.info(
-            "Push obavijesti obrađene.",
+            "Data push obavijesti obrađene.",
             {
               familyCode: familyCode,
               requestId: requestId,
@@ -118,7 +131,7 @@ exports.sendHelpNotification = onDocumentCreated(
         );
       } catch (error) {
         logger.error(
-            "Greška pri slanju push obavijesti.",
+            "Greška pri slanju data push obavijesti.",
             error,
         );
 
