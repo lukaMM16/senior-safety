@@ -8,12 +8,13 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'screens/family_auth_screen.dart';
 
 final FlutterLocalNotificationsPlugin localNotifications =
-    FlutterLocalNotificationsPlugin();
+FlutterLocalNotificationsPlugin();
 
 const AndroidNotificationChannel emergencyChannel =
-    AndroidNotificationChannel(
+AndroidNotificationChannel(
   'senior_safety_emergency',
   'Hitne obavijesti',
   description: 'Hitne Senior Safety obavijesti za pomoć.',
@@ -40,7 +41,7 @@ Future<void> initializeNotifications() async {
   }
 
   const androidSettings =
-      AndroidInitializationSettings('mipmap/ic_launcher');
+  AndroidInitializationSettings('mipmap/ic_launcher');
 
   const initializationSettings = InitializationSettings(
     android: androidSettings,
@@ -52,7 +53,7 @@ Future<void> initializeNotifications() async {
 
   final androidPlugin = localNotifications
       .resolvePlatformSpecificImplementation<
-          AndroidFlutterLocalNotificationsPlugin>();
+      AndroidFlutterLocalNotificationsPlugin>();
 
   await androidPlugin?.createNotificationChannel(
     emergencyChannel,
@@ -62,15 +63,15 @@ Future<void> initializeNotifications() async {
 }
 
 Future<void> showEmergencyNotification(
-  RemoteMessage message,
-) async {
+    RemoteMessage message,
+    ) async {
   await initializeNotifications();
 
   const androidDetails = AndroidNotificationDetails(
     'senior_safety_emergency',
     'Hitne obavijesti',
     channelDescription:
-        'Hitne Senior Safety obavijesti za pomoć.',
+    'Hitne Senior Safety obavijesti za pomoć.',
     importance: Importance.max,
     priority: Priority.max,
     playSound: true,
@@ -89,8 +90,8 @@ Future<void> showEmergencyNotification(
   final notificationId = requestId.isNotEmpty
       ? requestId.hashCode & 0x7fffffff
       : DateTime.now()
-          .millisecondsSinceEpoch
-          .remainder(2147483647);
+      .millisecondsSinceEpoch
+      .remainder(2147483647);
 
   final title = message.data['title']?.toString() ??
       message.notification?.title ??
@@ -113,8 +114,8 @@ Future<void> showEmergencyNotification(
 
 @pragma('vm:entry-point')
 Future<void> firebaseMessagingBackgroundHandler(
-  RemoteMessage message,
-) async {
+    RemoteMessage message,
+    ) async {
   await Firebase.initializeApp();
 
   try {
@@ -131,20 +132,20 @@ Future<void> startForegroundMessageListener() async {
 
   foregroundMessageSubscription =
       FirebaseMessaging.onMessage.listen(
-    (RemoteMessage message) async {
-      debugPrint(
-        'Primljena push poruka: ${message.data}',
-      );
+            (RemoteMessage message) async {
+          debugPrint(
+            'Primljena push poruka: ${message.data}',
+          );
 
-      try {
-        await showEmergencyNotification(message);
-      } catch (e) {
-        debugPrint(
-          'Greška kod prikaza obavijesti: $e',
-        );
-      }
-    },
-  );
+          try {
+            await showEmergencyNotification(message);
+          } catch (e) {
+            debugPrint(
+              'Greška kod prikaza obavijesti: $e',
+            );
+          }
+        },
+      );
 }
 
 Future<String?> getSavedFamilyCode() async {
@@ -168,8 +169,8 @@ Future<void> clearSavedRole() async {
 }
 
 Future<void> registerFamilyDevice(
-  String familyCode,
-) async {
+    String familyCode,
+    ) async {
   try {
     await initializeNotifications();
 
@@ -183,7 +184,7 @@ Future<void> registerFamilyDevice(
 
     debugPrint(
       'Notification permission: '
-      '${settings.authorizationStatus}',
+          '${settings.authorizationStatus}',
     );
 
     final token = await messaging.getToken();
@@ -232,33 +233,33 @@ Future<void> registerFamilyDevice(
 
     tokenRefreshSubscription =
         messaging.onTokenRefresh.listen(
-      (newToken) async {
-        final currentPrefs =
+              (newToken) async {
+            final currentPrefs =
             await SharedPreferences.getInstance();
 
-        final currentFamilyCode =
+            final currentFamilyCode =
             currentPrefs.getString(familyCodeKey);
 
-        final currentMemberId =
+            final currentMemberId =
             currentPrefs.getString(familyMemberIdKey);
 
-        if (currentFamilyCode == null ||
-            currentMemberId == null) {
-          return;
-        }
+            if (currentFamilyCode == null ||
+                currentMemberId == null) {
+              return;
+            }
 
-        await FirebaseFirestore.instance
-            .collection('families')
-            .doc(currentFamilyCode)
-            .collection('members')
-            .doc(currentMemberId)
-            .set({
-          'fcmToken': newToken,
-          'updatedAt':
+            await FirebaseFirestore.instance
+                .collection('families')
+                .doc(currentFamilyCode)
+                .collection('members')
+                .doc(currentMemberId)
+                .set({
+              'fcmToken': newToken,
+              'updatedAt':
               FieldValue.serverTimestamp(),
-        }, SetOptions(merge: true));
-      },
-    );
+            }, SetOptions(merge: true));
+          },
+        );
 
     debugPrint(
       'Uređaj registriran za obitelj $familyCode',
@@ -274,7 +275,7 @@ Future<String> getOrCreateSeniorFamilyCode() async {
   final prefs = await SharedPreferences.getInstance();
 
   final savedCode =
-      prefs.getString(seniorCodeKey);
+  prefs.getString(seniorCodeKey);
 
   if (savedCode != null) {
     return savedCode;
@@ -284,8 +285,8 @@ Future<String> getOrCreateSeniorFamilyCode() async {
 
   for (int attempt = 0; attempt < 20; attempt++) {
     final code =
-        (100000 + random.nextInt(900000))
-            .toString();
+    (100000 + random.nextInt(900000))
+        .toString();
 
     final familyRef = FirebaseFirestore.instance
         .collection('families')
@@ -347,7 +348,7 @@ class _SeniorSafetyAppState
         await startForegroundMessageListener();
 
         final familyCode =
-            await getSavedFamilyCode();
+        await getSavedFamilyCode();
 
         if (familyCode != null) {
           await registerFamilyDevice(
@@ -450,11 +451,11 @@ class RoleSelectionScreen extends StatelessWidget {
   const RoleSelectionScreen({super.key});
 
   Future<void> openSenior(
-    BuildContext context,
-  ) async {
+      BuildContext context,
+      ) async {
     try {
       final code =
-          await getOrCreateSeniorFamilyCode();
+      await getOrCreateSeniorFamilyCode();
 
       await saveRole(seniorRole);
 
@@ -465,8 +466,8 @@ class RoleSelectionScreen extends StatelessWidget {
         MaterialPageRoute(
           builder: (context) =>
               SeniorScreen(
-            familyCode: code,
-          ),
+                familyCode: code,
+              ),
         ),
       );
     } catch (e) {
@@ -483,49 +484,38 @@ class RoleSelectionScreen extends StatelessWidget {
   }
 
   Future<void> openFamily(
-    BuildContext context,
-  ) async {
-    final savedCode =
-        await getSavedFamilyCode();
+      BuildContext context,
+      ) async {
+    final result = await Navigator.push<bool>(
+      context,
+      MaterialPageRoute(
+        builder: (context) =>
+        const FamilyAuthScreen(),
+      ),
+    );
 
     if (!context.mounted) return;
 
-    if (savedCode != null) {
-      await saveRole(familyRole);
-
-      if (!context.mounted) return;
-
+    if (result == true) {
       Navigator.push(
         context,
         MaterialPageRoute(
           builder: (context) =>
-              FamilyScreen(
-            familyCode: savedCode,
-          ),
+          const FamilyPairingScreen(),
         ),
       );
-
-      return;
     }
-
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) =>
-            const FamilyPairingScreen(),
-      ),
-    );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor:
-          const Color(0xFFF8F6F1),
+      const Color(0xFFF8F6F1),
       body: SafeArea(
         child: Padding(
           padding:
-              const EdgeInsets.all(24),
+          const EdgeInsets.all(24),
           child: Column(
             children: [
               const Spacer(),
@@ -543,7 +533,7 @@ class RoleSelectionScreen extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 32,
                   fontWeight:
-                      FontWeight.bold,
+                  FontWeight.bold,
                   color: Color(0xFF006D77),
                 ),
               ),
@@ -553,7 +543,7 @@ class RoleSelectionScreen extends StatelessWidget {
               const Text(
                 'Sigurnost i povezanost s obitelji',
                 textAlign:
-                    TextAlign.center,
+                TextAlign.center,
                 style: TextStyle(
                   fontSize: 18,
                   color: Colors.black54,
@@ -567,7 +557,7 @@ class RoleSelectionScreen extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 22,
                   fontWeight:
-                      FontWeight.w600,
+                  FontWeight.w600,
                 ),
               ),
 
@@ -577,7 +567,7 @@ class RoleSelectionScreen extends StatelessWidget {
                 width: double.infinity,
                 height: 90,
                 child:
-                    ElevatedButton.icon(
+                ElevatedButton.icon(
                   onPressed: () {
                     openSenior(context);
                   },
@@ -590,7 +580,7 @@ class RoleSelectionScreen extends StatelessWidget {
                     style: TextStyle(
                       fontSize: 22,
                       fontWeight:
-                          FontWeight.bold,
+                      FontWeight.bold,
                     ),
                   ),
                 ),
@@ -602,7 +592,7 @@ class RoleSelectionScreen extends StatelessWidget {
                 width: double.infinity,
                 height: 90,
                 child:
-                    OutlinedButton.icon(
+                OutlinedButton.icon(
                   onPressed: () {
                     openFamily(context);
                   },
@@ -615,7 +605,7 @@ class RoleSelectionScreen extends StatelessWidget {
                     style: TextStyle(
                       fontSize: 22,
                       fontWeight:
-                          FontWeight.bold,
+                      FontWeight.bold,
                     ),
                   ),
                 ),
@@ -646,19 +636,19 @@ class SeniorScreen extends StatelessWidget {
   });
 
   Future<void> sendStatus(
-    BuildContext context,
-    String status,
-  ) async {
+      BuildContext context,
+      String status,
+      ) async {
     try {
       final familyRef =
-          FirebaseFirestore.instance
-              .collection('families')
-              .doc(familyCode);
+      FirebaseFirestore.instance
+          .collection('families')
+          .doc(familyCode);
 
       await familyRef.set({
         'status': status,
         'timestamp':
-            FieldValue.serverTimestamp(),
+        FieldValue.serverTimestamp(),
       }, SetOptions(merge: true));
 
       if (status ==
@@ -668,7 +658,7 @@ class SeniorScreen extends StatelessWidget {
             .add({
           'status': status,
           'timestamp':
-              FieldValue.serverTimestamp(),
+          FieldValue.serverTimestamp(),
         });
       }
 
@@ -705,9 +695,9 @@ class SeniorScreen extends StatelessWidget {
     Navigator.of(context).pushAndRemoveUntil(
       MaterialPageRoute(
         builder: (context) =>
-            const RoleSelectionScreen(),
+        const RoleSelectionScreen(),
       ),
-      (route) => false,
+          (route) => false,
     );
   }
 
@@ -715,12 +705,12 @@ class SeniorScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor:
-          const Color(0xFFF8F6F1),
+      const Color(0xFFF8F6F1),
       appBar: AppBar(
         title:
-            const Text('Senior Safety'),
+        const Text('Senior Safety'),
         backgroundColor:
-            const Color(0xFF006D77),
+        const Color(0xFF006D77),
         foregroundColor: Colors.white,
         actions: [
           IconButton(
@@ -737,7 +727,7 @@ class SeniorScreen extends StatelessWidget {
       body: SafeArea(
         child: Padding(
           padding:
-              const EdgeInsets.all(24),
+          const EdgeInsets.all(24),
           child: Column(
             children: [
               const SizedBox(height: 15),
@@ -757,7 +747,7 @@ class SeniorScreen extends StatelessWidget {
                 style: const TextStyle(
                   fontSize: 32,
                   fontWeight:
-                      FontWeight.bold,
+                  FontWeight.bold,
                   letterSpacing: 5,
                   color: Color(0xFF006D77),
                 ),
@@ -768,7 +758,7 @@ class SeniorScreen extends StatelessWidget {
               const Text(
                 'Član obitelji treba upisati ovaj kod.',
                 textAlign:
-                    TextAlign.center,
+                TextAlign.center,
                 style: TextStyle(
                   fontSize: 14,
                   color: Colors.black54,
@@ -782,7 +772,7 @@ class SeniorScreen extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 26,
                   fontWeight:
-                      FontWeight.w600,
+                  FontWeight.w600,
                 ),
               ),
 
@@ -793,15 +783,15 @@ class SeniorScreen extends StatelessWidget {
                 height: 140,
                 child: ElevatedButton(
                   style:
-                      ElevatedButton.styleFrom(
+                  ElevatedButton.styleFrom(
                     backgroundColor:
-                        Colors.green,
+                    Colors.green,
                     foregroundColor:
-                        Colors.white,
+                    Colors.white,
                     shape:
-                        RoundedRectangleBorder(
+                    RoundedRectangleBorder(
                       borderRadius:
-                          BorderRadius.circular(
+                      BorderRadius.circular(
                         20,
                       ),
                     ),
@@ -817,7 +807,7 @@ class SeniorScreen extends StatelessWidget {
                     style: TextStyle(
                       fontSize: 32,
                       fontWeight:
-                          FontWeight.bold,
+                      FontWeight.bold,
                     ),
                   ),
                 ),
@@ -830,15 +820,15 @@ class SeniorScreen extends StatelessWidget {
                 height: 140,
                 child: ElevatedButton(
                   style:
-                      ElevatedButton.styleFrom(
+                  ElevatedButton.styleFrom(
                     backgroundColor:
-                        Colors.red,
+                    Colors.red,
                     foregroundColor:
-                        Colors.white,
+                    Colors.white,
                     shape:
-                        RoundedRectangleBorder(
+                    RoundedRectangleBorder(
                       borderRadius:
-                          BorderRadius.circular(
+                      BorderRadius.circular(
                         20,
                       ),
                     ),
@@ -852,11 +842,11 @@ class SeniorScreen extends StatelessWidget {
                   child: const Text(
                     'TREBA MI POMOĆ',
                     textAlign:
-                        TextAlign.center,
+                    TextAlign.center,
                     style: TextStyle(
                       fontSize: 32,
                       fontWeight:
-                          FontWeight.bold,
+                      FontWeight.bold,
                     ),
                   ),
                 ),
@@ -866,7 +856,7 @@ class SeniorScreen extends StatelessWidget {
 
               const Row(
                 mainAxisAlignment:
-                    MainAxisAlignment.center,
+                MainAxisAlignment.center,
                 children: [
                   Icon(
                     Icons.cloud_done,
@@ -894,21 +884,21 @@ class FamilyPairingScreen
 
   @override
   State<FamilyPairingScreen>
-      createState() =>
-          _FamilyPairingScreenState();
+  createState() =>
+      _FamilyPairingScreenState();
 }
 
 class _FamilyPairingScreenState
     extends State<FamilyPairingScreen> {
   final TextEditingController
-      codeController =
-      TextEditingController();
+  codeController =
+  TextEditingController();
 
   bool loading = false;
 
   Future<void> connect() async {
     final code =
-        codeController.text.trim();
+    codeController.text.trim();
 
     if (code.length != 6) {
       ScaffoldMessenger.of(context)
@@ -929,10 +919,10 @@ class _FamilyPairingScreenState
 
     try {
       final familyDocument =
-          await FirebaseFirestore.instance
-              .collection('families')
-              .doc(code)
-              .get();
+      await FirebaseFirestore.instance
+          .collection('families')
+          .doc(code)
+          .get();
 
       if (!familyDocument.exists) {
         if (!mounted) return;
@@ -962,8 +952,8 @@ class _FamilyPairingScreenState
         MaterialPageRoute(
           builder: (context) =>
               FamilyScreen(
-            familyCode: code,
-          ),
+                familyCode: code,
+              ),
         ),
       );
     } catch (e) {
@@ -996,20 +986,20 @@ class _FamilyPairingScreenState
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor:
-          const Color(0xFFF8F6F1),
+      const Color(0xFFF8F6F1),
       appBar: AppBar(
         title:
-            const Text('Povezivanje'),
+        const Text('Povezivanje'),
         backgroundColor:
-            const Color(0xFF006D77),
+        const Color(0xFF006D77),
         foregroundColor: Colors.white,
       ),
       body: Padding(
         padding:
-            const EdgeInsets.all(24),
+        const EdgeInsets.all(24),
         child: Column(
           mainAxisAlignment:
-              MainAxisAlignment.center,
+          MainAxisAlignment.center,
           children: [
             const Icon(
               Icons.link,
@@ -1022,11 +1012,11 @@ class _FamilyPairingScreenState
             const Text(
               'Povežite se sa starijom osobom',
               textAlign:
-                  TextAlign.center,
+              TextAlign.center,
               style: TextStyle(
                 fontSize: 26,
                 fontWeight:
-                    FontWeight.bold,
+                FontWeight.bold,
               ),
             ),
 
@@ -1035,7 +1025,7 @@ class _FamilyPairingScreenState
             const Text(
               'Upišite 6-znamenkasti kod prikazan na mobitelu starije osobe.',
               textAlign:
-                  TextAlign.center,
+              TextAlign.center,
               style: TextStyle(
                 fontSize: 16,
                 color: Colors.black54,
@@ -1046,11 +1036,11 @@ class _FamilyPairingScreenState
 
             TextField(
               controller:
-                  codeController,
+              codeController,
               keyboardType:
-                  TextInputType.number,
+              TextInputType.number,
               textAlign:
-                  TextAlign.center,
+              TextAlign.center,
               maxLength: 6,
               inputFormatters: [
                 FilteringTextInputFormatter
@@ -1059,15 +1049,15 @@ class _FamilyPairingScreenState
               style: const TextStyle(
                 fontSize: 30,
                 fontWeight:
-                    FontWeight.bold,
+                FontWeight.bold,
                 letterSpacing: 6,
               ),
               decoration:
-                  const InputDecoration(
+              const InputDecoration(
                 labelText:
-                    'Kod za povezivanje',
+                'Kod za povezivanje',
                 border:
-                    OutlineInputBorder(),
+                OutlineInputBorder(),
               ),
             ),
 
@@ -1078,17 +1068,17 @@ class _FamilyPairingScreenState
               height: 60,
               child: ElevatedButton(
                 onPressed:
-                    loading ? null : connect,
+                loading ? null : connect,
                 child: loading
                     ? const CircularProgressIndicator()
                     : const Text(
-                        'POVEŽI',
-                        style: TextStyle(
-                          fontSize: 20,
-                          fontWeight:
-                              FontWeight.bold,
-                        ),
-                      ),
+                  'POVEŽI',
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight:
+                    FontWeight.bold,
+                  ),
+                ),
               ),
             ),
           ],
@@ -1133,11 +1123,11 @@ class _FamilyScreenState
 
   Future<void> disconnect() async {
     final prefs =
-        await SharedPreferences
-            .getInstance();
+    await SharedPreferences
+        .getInstance();
 
     final memberId =
-        prefs.getString(
+    prefs.getString(
       familyMemberIdKey,
     );
 
@@ -1173,31 +1163,31 @@ class _FamilyScreenState
     Navigator.of(context).pushAndRemoveUntil(
       MaterialPageRoute(
         builder: (context) =>
-            const RoleSelectionScreen(),
+        const RoleSelectionScreen(),
       ),
-      (route) => false,
+          (route) => false,
     );
   }
 
   String formatTime(
-    Timestamp? timestamp,
-  ) {
+      Timestamp? timestamp,
+      ) {
     if (timestamp == null) {
       return '--:--';
     }
 
     final time =
-        timestamp.toDate().toLocal();
+    timestamp.toDate().toLocal();
 
     final hour =
-        time.hour
-            .toString()
-            .padLeft(2, '0');
+    time.hour
+        .toString()
+        .padLeft(2, '0');
 
     final minute =
-        time.minute
-            .toString()
-            .padLeft(2, '0');
+    time.minute
+        .toString()
+        .padLeft(2, '0');
 
     return '$hour:$minute';
   }
@@ -1206,12 +1196,12 @@ class _FamilyScreenState
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor:
-          const Color(0xFFF8F6F1),
+      const Color(0xFFF8F6F1),
       appBar: AppBar(
         title:
-            const Text('Član obitelji'),
+        const Text('Član obitelji'),
         backgroundColor:
-            const Color(0xFF006D77),
+        const Color(0xFF006D77),
         foregroundColor: Colors.white,
         actions: [
           IconButton(
@@ -1226,18 +1216,18 @@ class _FamilyScreenState
       body: SafeArea(
         child: Padding(
           padding:
-              const EdgeInsets.all(24),
+          const EdgeInsets.all(24),
           child:
-              StreamBuilder<DocumentSnapshot>(
+          StreamBuilder<DocumentSnapshot>(
             stream:
-                FirebaseFirestore.instance
-                    .collection('families')
-                    .doc(widget.familyCode)
-                    .snapshots(),
+            FirebaseFirestore.instance
+                .collection('families')
+                .doc(widget.familyCode)
+                .snapshots(),
             builder: (
-              context,
-              snapshot,
-            ) {
+                context,
+                snapshot,
+                ) {
               if (snapshot.hasError) {
                 return const Center(
                   child: Text(
@@ -1250,7 +1240,7 @@ class _FamilyScreenState
                   ConnectionState.waiting) {
                 return const Center(
                   child:
-                      CircularProgressIndicator(),
+                  CircularProgressIndicator(),
                 );
               }
 
@@ -1262,16 +1252,16 @@ class _FamilyScreenState
               if (snapshot.hasData &&
                   snapshot.data!.exists) {
                 final data =
-                    snapshot.data!.data()
-                        as Map<String, dynamic>;
+                snapshot.data!.data()
+                as Map<String, dynamic>;
 
                 status =
                     data['status'] ??
                         'NEMA STATUSA';
 
                 timestamp =
-                    data['timestamp']
-                        as Timestamp?;
+                data['timestamp']
+                as Timestamp?;
               }
 
               final needsHelp =
@@ -1282,24 +1272,24 @@ class _FamilyScreenState
                   status == 'DOBRO SAM';
 
               final statusColor =
-                  needsHelp
-                      ? Colors.red
-                      : isOkay
-                          ? Colors.green
-                          : Colors.grey;
+              needsHelp
+                  ? Colors.red
+                  : isOkay
+                  ? Colors.green
+                  : Colors.grey;
 
               return Column(
                 crossAxisAlignment:
-                    CrossAxisAlignment.stretch,
+                CrossAxisAlignment.stretch,
                 children: [
                   Text(
                     'Povezano: ${widget.familyCode}',
                     textAlign:
-                        TextAlign.center,
+                    TextAlign.center,
                     style:
-                        const TextStyle(
+                    const TextStyle(
                       color:
-                          Colors.black54,
+                      Colors.black54,
                     ),
                   ),
 
@@ -1309,7 +1299,7 @@ class _FamilyScreenState
                     Icons.family_restroom,
                     size: 70,
                     color:
-                        Color(0xFF006D77),
+                    Color(0xFF006D77),
                   ),
 
                   const SizedBox(height: 15),
@@ -1317,11 +1307,11 @@ class _FamilyScreenState
                   const Text(
                     'Status starije osobe',
                     textAlign:
-                        TextAlign.center,
+                    TextAlign.center,
                     style: TextStyle(
                       fontSize: 26,
                       fontWeight:
-                          FontWeight.bold,
+                      FontWeight.bold,
                     ),
                   ),
 
@@ -1329,17 +1319,17 @@ class _FamilyScreenState
 
                   Container(
                     padding:
-                        const EdgeInsets.all(
+                    const EdgeInsets.all(
                       24,
                     ),
                     decoration:
-                        BoxDecoration(
+                    BoxDecoration(
                       color: statusColor
                           .withValues(
                         alpha: 0.15,
                       ),
                       borderRadius:
-                          BorderRadius.circular(
+                      BorderRadius.circular(
                         20,
                       ),
                       border: Border.all(
@@ -1353,13 +1343,13 @@ class _FamilyScreenState
                           needsHelp
                               ? Icons.warning
                               : isOkay
-                                  ? Icons
-                                      .check_circle
-                                  : Icons
-                                      .help_outline,
+                              ? Icons
+                              .check_circle
+                              : Icons
+                              .help_outline,
                           size: 65,
                           color:
-                              statusColor,
+                          statusColor,
                         ),
 
                         const SizedBox(
@@ -1369,14 +1359,14 @@ class _FamilyScreenState
                         Text(
                           status,
                           textAlign:
-                              TextAlign.center,
+                          TextAlign.center,
                           style:
-                              TextStyle(
+                          TextStyle(
                             fontSize: 30,
                             fontWeight:
-                                FontWeight.bold,
+                            FontWeight.bold,
                             color:
-                                statusColor,
+                            statusColor,
                           ),
                         ),
                       ],
@@ -1387,27 +1377,27 @@ class _FamilyScreenState
 
                   Container(
                     padding:
-                        const EdgeInsets.all(
+                    const EdgeInsets.all(
                       20,
                     ),
                     decoration:
-                        BoxDecoration(
+                    BoxDecoration(
                       color: Colors.white,
                       borderRadius:
-                          BorderRadius.circular(
+                      BorderRadius.circular(
                         16,
                       ),
                     ),
                     child: Column(
                       crossAxisAlignment:
-                          CrossAxisAlignment
-                              .start,
+                      CrossAxisAlignment
+                          .start,
                       children: [
                         const Text(
                           'Zadnji status:',
                           style: TextStyle(
                             color:
-                                Colors.black54,
+                            Colors.black54,
                           ),
                         ),
 
@@ -1418,10 +1408,10 @@ class _FamilyScreenState
                         Text(
                           status,
                           style:
-                              const TextStyle(
+                          const TextStyle(
                             fontSize: 22,
                             fontWeight:
-                                FontWeight.bold,
+                            FontWeight.bold,
                           ),
                         ),
 
@@ -1433,7 +1423,7 @@ class _FamilyScreenState
                           'Vrijeme slanja:',
                           style: TextStyle(
                             color:
-                                Colors.black54,
+                            Colors.black54,
                           ),
                         ),
 
@@ -1446,10 +1436,10 @@ class _FamilyScreenState
                             timestamp,
                           ),
                           style:
-                              const TextStyle(
+                          const TextStyle(
                             fontSize: 22,
                             fontWeight:
-                                FontWeight.bold,
+                            FontWeight.bold,
                           ),
                         ),
                       ],
@@ -1460,19 +1450,19 @@ class _FamilyScreenState
 
                   Row(
                     mainAxisAlignment:
-                        MainAxisAlignment.center,
+                    MainAxisAlignment.center,
                     children: [
                       Icon(
                         pushRegistered
                             ? Icons
-                                .notifications_active
+                            .notifications_active
                             : Icons.sync,
                         color:
-                            pushRegistered
-                                ? Colors.green
-                                : const Color(
-                                    0xFF006D77,
-                                  ),
+                        pushRegistered
+                            ? Colors.green
+                            : const Color(
+                          0xFF006D77,
+                        ),
                       ),
 
                       const SizedBox(
@@ -1484,9 +1474,9 @@ class _FamilyScreenState
                             ? 'Push obavijesti su aktivne'
                             : 'Registracija za push...',
                         style:
-                            const TextStyle(
+                        const TextStyle(
                           color:
-                              Colors.black54,
+                          Colors.black54,
                         ),
                       ),
                     ],
