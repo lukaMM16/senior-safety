@@ -8,13 +8,19 @@ class AuthService {
   Stream<User?> get authStateChanges => _auth.authStateChanges();
 
   Future<UserCredential> registerFamilyMember({
+    required String name,
     required String email,
     required String password,
   }) async {
-    return await _auth.createUserWithEmailAndPassword(
+    final credential = await _auth.createUserWithEmailAndPassword(
       email: email.trim(),
       password: password,
     );
+
+    await credential.user?.updateDisplayName(name.trim());
+    await credential.user?.reload();
+
+    return credential;
   }
 
   Future<UserCredential> signInFamilyMember({

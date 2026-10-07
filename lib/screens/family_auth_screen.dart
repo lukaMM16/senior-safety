@@ -13,6 +13,7 @@ class FamilyAuthScreen extends StatefulWidget {
 class _FamilyAuthScreenState extends State<FamilyAuthScreen> {
   final AuthService authService = AuthService();
 
+  final TextEditingController nameController = TextEditingController();
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
   final TextEditingController confirmPasswordController =
@@ -24,6 +25,7 @@ class _FamilyAuthScreenState extends State<FamilyAuthScreen> {
 
   @override
   void dispose() {
+    nameController.dispose();
     emailController.dispose();
     passwordController.dispose();
     confirmPasswordController.dispose();
@@ -31,9 +33,15 @@ class _FamilyAuthScreenState extends State<FamilyAuthScreen> {
   }
 
   Future<void> submit() async {
+    final name = nameController.text.trim();
     final email = emailController.text.trim();
     final password = passwordController.text;
     final confirmPassword = confirmPasswordController.text;
+
+    if (isRegisterMode && name.isEmpty) {
+      showMessage('Upišite ime.');
+      return;
+    }
 
     if (email.isEmpty || password.isEmpty) {
       showMessage('Upišite email i lozinku.');
@@ -57,6 +65,7 @@ class _FamilyAuthScreenState extends State<FamilyAuthScreen> {
     try {
       if (isRegisterMode) {
         await authService.registerFamilyMember(
+          name: name,
           email: email,
           password: password,
         );
@@ -155,6 +164,20 @@ class _FamilyAuthScreenState extends State<FamilyAuthScreen> {
 
               const SizedBox(height: 35),
 
+              if (isRegisterMode) ...[
+                TextField(
+                  controller: nameController,
+                  textCapitalization: TextCapitalization.words,
+                  decoration: const InputDecoration(
+                    labelText: 'Ime',
+                    prefixIcon: Icon(Icons.person_outline),
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+
+                const SizedBox(height: 18),
+              ],
+
               TextField(
                 controller: emailController,
                 keyboardType: TextInputType.emailAddress,
@@ -233,6 +256,7 @@ class _FamilyAuthScreenState extends State<FamilyAuthScreen> {
                     : () {
                   setState(() {
                     isRegisterMode = !isRegisterMode;
+                    nameController.clear();
                     confirmPasswordController.clear();
                   });
                 },
